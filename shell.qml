@@ -5,6 +5,7 @@ import Quickshell.Wayland
 import Quickshell.Services.Notifications
 import QtQuick.Controls
 import QMLTermWidget
+
 ShellRoot {
     id: root
 
@@ -35,9 +36,12 @@ ShellRoot {
     }
 
 
-    PanelWindow { // Notifications Page
+    PanelWindow { // Console Page
         id: console_page
         property var name: "Console"
+
+        focusable: true
+        aboveWindows: true
 
         visible: (active_page == name) ? true : false
         color: "transparent"
@@ -56,12 +60,49 @@ ShellRoot {
         }
 
         Rectangle { 
+            
             anchors.fill: parent
             color: "black"
             border.color: "white"
             border.width: 5
+            z: 2
 
-            QMLTermWidget {
+            Rectangle {
+                anchors.bottom: parent.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: 100
+                color: "yellow"
+                anchors.margins: 5
+
+                TextField {
+                    id: field
+                    focus: true
+                    anchors.fill: parent
+                    placeholderText: "INPUT TEXT HERE"
+                    font.pixelSize: 64
+                    Component.onCompleted: field.forceActiveFocus();
+
+                    onAccepted: {
+                        console.log(text)
+                        mainsession.sendText("sudo pacman -Q a");
+                        mainsession.sendKeyEvent("ENTER")
+                        text = ""
+                    }
+
+                    z: 3
+                }
+            }
+
+            Rectangle {
+                anchors.fill: parent
+                anchors.bottomMargin: 200
+                anchors.topMargin: 5
+                anchors.rightMargin: 5
+                anchors.leftMargin: 5
+                color: "transparent"
+
+                QMLTermWidget {
                 id: terminal
                 anchors.fill: parent
                 font.family: "Monospace"
@@ -75,12 +116,21 @@ ShellRoot {
                     }
                     onNoMatchFound: {
                         console.log("not found");
+
                     }
+
                 }
                 onTerminalUsesMouseChanged: console.log(terminalUsesMouse);
                 onTerminalSizeChanged: console.log(terminalSize);
                 Component.onCompleted: mainsession.startShellProgram();
+                }
+
             }
+
+
+            
+
+            
         }
     }
 
