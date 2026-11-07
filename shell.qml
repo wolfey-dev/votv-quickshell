@@ -21,6 +21,49 @@ ShellRoot {
 
     property var notif_body: ""
 
+    ListModel {
+        id: settingsModel
+        
+        ListElement {
+            name: "test_category"
+            
+            properties: [
+                ListElement {
+                name: "test_property1"
+                value: 10
+                },
+                ListElement {
+                name: "test_property2"
+                value: 10
+                },
+                ListElement {
+                name: "test_property3"
+                value: 10
+                }
+            ]
+        }
+
+        ListElement {
+            name: "test_category2"
+            
+            properties: [
+                ListElement {
+                name: "test_property1"
+                value: 10
+                },
+                ListElement {
+                name: "test_property2"
+                value: 10
+                },
+                ListElement {
+                name: "test_property3"
+                value: 10
+                }
+            ]
+        }
+
+    }
+
     NotificationServer {
         id: server
         actionsSupported: true
@@ -34,6 +77,201 @@ ShellRoot {
 
         }
     }
+
+    PanelWindow { // Viewer Page
+        id: viewer_page
+        property var name: "Viewer"
+
+        visible: (active_page == name) ? true : false
+        color: "transparent"
+
+        anchors {
+            top: true
+            bottom: true
+            right: true
+            left: true
+        }
+
+        margins {
+            left: 5
+            right: 5
+            bottom: 5
+        }
+
+        Rectangle { 
+            
+            anchors.fill: parent
+            color: "black"
+            border.color: "white"
+            border.width: 5
+
+            Text {
+                color: "white"
+                font.pixelSize: 64
+                text: "WORK IN PROGRESS"
+                font.family: "Fixedsys Excelsior"
+
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+            
+        }
+    }
+
+
+    PanelWindow { // Settings Page
+        id: settings_page
+        property var name: "Settings"
+
+        visible: (active_page == name) ? true : false
+        color: "transparent"
+
+        anchors {
+            top: true
+            bottom: true
+            right: true
+            left: true
+        }
+
+        margins {
+            left: 5
+            right: 5
+            bottom: 5
+        }
+
+        Rectangle { 
+            
+            anchors.fill: parent
+            color: "black"
+            border.color: "white"
+            border.width: 5
+
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: 10
+                color: "transparent"
+
+                ColumnLayout {
+                    spacing: 5
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+
+                    Repeater {
+                        model: settingsModel
+
+                        delegate: Rectangle { // Category
+
+                            id: entry
+                            required property int index
+
+                            property var h: 100
+                            property var num: 0
+                            property bool dropped: false
+
+                            Layout.fillWidth: true
+
+                            implicitHeight: entry.h
+
+                            color: "transparent"
+
+                            border.color: "white"
+
+                            border.width: 5
+
+                            Component.onCompleted: {
+                                num = settingsModel.get(index).properties.count;
+                            }
+                            Button {
+                                implicitWidth: parent.width
+                                implicitHeight: 100
+                                background: Rectangle{
+                                    color: "transparent"
+                                }
+
+                                onClicked: {
+                                    console.log("click")
+                                    dropped = !dropped
+                                    console.log(dropped)
+                                }
+
+                            }
+
+
+                            Text {
+                                x: 100
+                                color: "white"
+                                text: "coordinates"
+                                font.pixelSize: 64
+                                font.family: "Fixedsys Excelsior"
+                                y: 20
+                            }
+
+                            Rectangle {
+                                id: audio
+                                color: "transparent"
+                                anchors.fill: parent
+                                anchors.topMargin: 100
+
+                                
+                                ColumnLayout { 
+
+                                    spacing: 0
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.margins: 50
+
+                                    Repeater {
+                                        
+                                        model: (dropped == true) ? num : 0
+                                        delegate: Rectangle { // Individual Properties
+
+                                            required property int index
+                                            color: "transparent"
+                                            border.color: "white"
+                                            border.width: 5
+                                            Layout.fillWidth: true
+                                            implicitHeight: 100
+                                            Component.onCompleted: {
+                                                entry.h += 110
+                                                console.log("entry", entry.index)
+                                                console.log(index, settingsModel.get(entry.index).properties.get(index).name)
+                                            }
+                                            Component.onDestruction: entry.h -= 110
+                                            Text {
+                                                text: settingsModel.get(entry.index).properties.get(index).name
+                                                color: "white"
+                                                x: 25
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                font.family: "Fixedsys Excelsior"
+
+                                                font.pixelSize: 64 
+                                            }
+                                        }
+                                    
+                                    }
+                                }
+                            }
+
+
+                    }
+                    
+
+
+                    
+                    }
+
+
+                    
+                    
+                    
+                }
+            }
+            
+            
+            
+        }
+    }
+
 
 
     PanelWindow { // Console Page
@@ -85,8 +323,7 @@ ShellRoot {
 
                     onAccepted: {
                         console.log(text)
-                        mainsession.sendText("sudo pacman -Q a");
-                        mainsession.sendKeyEvent("ENTER")
+                        mainsession.sendText(text + "\n");
                         text = ""
                     }
 
@@ -105,7 +342,7 @@ ShellRoot {
                 QMLTermWidget {
                 id: terminal
                 anchors.fill: parent
-                font.family: "Monospace"
+                font.family: "Fixedsys Excelsior"
                 font.pointSize: 12
                 colorScheme: "cool-retro-term"
                 session: QMLTermSession{
