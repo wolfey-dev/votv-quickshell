@@ -5,6 +5,8 @@ import Quickshell.Wayland
 import Quickshell.Services.Notifications
 import QtQuick.Controls
 import QMLTermWidget
+import "scripts/colours.js" as Colours
+
 
 ShellRoot {
     id: root
@@ -21,43 +23,31 @@ ShellRoot {
 
     property var notif_body: ""
 
+    Item {
+
+    }
     ListModel {
         id: settingsModel
         
-        ListElement {
-            name: "test_category"
-            
+        ListElement {            
             properties: [
                 ListElement {
                 name: "test_property1"
-                value: 10
+                current_value: 2
+                max_value: 5
+                min_value: 0
                 },
                 ListElement {
                 name: "test_property2"
-                value: 10
+                current_value: 1
+                max_value: 3
+                min_value: 1
                 },
                 ListElement {
                 name: "test_property3"
-                value: 10
-                }
-            ]
-        }
-
-        ListElement {
-            name: "test_category2"
-            
-            properties: [
-                ListElement {
-                name: "test_property1"
-                value: 10
-                },
-                ListElement {
-                name: "test_property2"
-                value: 10
-                },
-                ListElement {
-                name: "test_property3"
-                value: 10
+                current_value: 8
+                max_value: 10
+                min_value: 0
                 }
             ]
         }
@@ -189,16 +179,14 @@ ShellRoot {
                                 }
 
                                 onClicked: {
-                                    console.log("click")
                                     dropped = !dropped
-                                    console.log(dropped)
                                 }
 
                             }
 
 
                             Text {
-                                x: 100
+                                x: 75
                                 color: "white"
                                 text: "coordinates"
                                 font.pixelSize: 64
@@ -224,7 +212,7 @@ ShellRoot {
                                         
                                         model: (dropped == true) ? num : 0
                                         delegate: Rectangle { // Individual Properties
-
+                                            id: rec
                                             required property int index
                                             color: "transparent"
                                             border.color: "white"
@@ -233,19 +221,178 @@ ShellRoot {
                                             implicitHeight: 100
                                             Component.onCompleted: {
                                                 entry.h += 110
-                                                console.log("entry", entry.index)
-                                                console.log(index, settingsModel.get(entry.index).properties.get(index).name)
                                             }
                                             Component.onDestruction: entry.h -= 110
                                             Text {
                                                 text: settingsModel.get(entry.index).properties.get(index).name
                                                 color: "white"
-                                                x: 25
+                                                x: 1275
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 font.family: "Fixedsys Excelsior"
 
                                                 font.pixelSize: 64 
                                             }
+
+                                            Rectangle {
+                                                color: "transparent"
+                                                anchors.top: parent.top
+                                                anchors.bottom: parent.bottom
+                                                anchors.left: parent.left
+                                                anchors.margins: 10
+                                                implicitWidth: 250
+                                                implicitHeight: parent.height
+                                                border.color: "yellow"
+                                                border.width: 5
+                                                Text {
+                                                    text: settingsModel.get(entry.index).properties.get(index).current_value + "/" + settingsModel.get(entry.index).properties.get(index).max_value
+                                                    color: "yellow"
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    anchors.horizontalCenter: parent.horizontalCenter
+                                                    font.family: "Fixedsys Excelsior"
+
+                                                    font.pixelSize: 48
+                                                }
+                                            }
+
+                                            Rectangle {
+                                                id: value_buttons
+                                                property int current_value: settingsModel.get(entry.index).properties.get(index).current_value
+                                                property int min_value: settingsModel.get(entry.index).properties.get(index).min_value
+                                                property int max_value: settingsModel.get(entry.index).properties.get(index).max_value
+                                
+                
+                                                color: "transparent"
+                                                anchors.top: parent.top
+                                                anchors.bottom: parent.bottom
+                                                anchors.left: parent.left
+                                                anchors.leftMargin: 1050
+                                                implicitWidth: 215
+                                                implicitHeight: parent.height
+
+                                                border.color: "white"
+                                                border.width: 5
+
+                                                Rectangle {
+                                                    color: "transparent"
+                                                    anchors.top: parent.top
+                                                    anchors.bottom: parent.bottom
+                                                    anchors.left: parent.left
+                                                    anchors.margins: 10
+                                                    implicitWidth: parent.height - 10
+                                                    implicitHeight: parent.height
+
+                                                    border.color: "lime"
+                                                    border.width: 5
+
+                                                    Button {
+                                                        anchors.fill: parent
+                                                        background: Rectangle {
+                                                            color: "transparent"
+                                                        }
+                                                        onClicked: {
+                                                            
+                                                            (value_buttons.current_value != value_buttons.max_value) ? settingsModel.get(entry.index).properties.setProperty(index, "current_value", (value_buttons.current_value + 1)) : ""
+                                                            
+                                                            console.log(settingsModel.get(entry.index).properties.get(index).current_value)
+
+                                                        }
+                                                    }
+                                                    Text {
+                                                        text: "+"
+                                                        color: "lime"
+                                                        anchors.verticalCenter: parent.verticalCenter
+                                                        anchors.horizontalCenter: parent.horizontalCenter
+                                                        font.family: "Fixedsys Excelsior"
+
+                                                        font.pixelSize: 48
+                                                    }
+                                                }
+
+                                                Rectangle {
+                                                    color: "transparent"
+                                                    anchors.top: parent.top
+                                                    anchors.bottom: parent.bottom
+                                                    anchors.right: parent.right
+                                                    anchors.margins: 10
+                                                    implicitWidth: parent.height - 10
+                                                    implicitHeight: parent.height
+
+                                                    border.color: "lime"
+                                                    border.width: 5
+                                                    Button {
+                                                        anchors.fill: parent
+                                                        background: Rectangle {
+                                                            color: "transparent"
+                                                        }
+                                                        onClicked: {
+                                                            (value_buttons.current_value != value_buttons.min_value) ? settingsModel.get(entry.index).properties.setProperty(index, "current_value", (value_buttons.current_value - 1)) : ""
+
+                                                            // settingsModel.get(entry.index).properties.setProperty(index, "current_value", (value_buttons.current_value - 1))
+                                                            console.log(settingsModel.get(entry.index).properties.get(index).min_value)
+                                                            console.log(settingsModel.get(entry.index).properties.get(index).current_value)
+
+                                                        }
+                                                    }
+
+                                                    Text {
+                                                        text: "-"
+                                                        color: "lime"
+                                                        anchors.verticalCenter: parent.verticalCenter
+                                                        anchors.horizontalCenter: parent.horizontalCenter
+                                                        font.family: "Fixedsys Excelsior"
+
+                                                        font.pixelSize: 48
+                                                    }
+                                                }
+
+
+                                            }
+                                            
+
+
+                                            Rectangle {
+                                                id: thingy
+                                                property int current_value: settingsModel.get(entry.index).properties.get(index).current_value
+                                                
+
+                                                color: "transparent"
+                                                anchors.top: parent.top
+                                                anchors.bottom: parent.bottom
+                                                anchors.left: parent.left
+                                                anchors.margins: 10
+                                                anchors.leftMargin: 280
+                                                implicitWidth: 750
+                                                implicitHeight: parent.height
+
+                                                RowLayout {
+                                                    anchors.fill: parent
+                                                    anchors.bottomMargin: 20
+                                                    spacing: 5
+
+                                                    Repeater {
+                                                        model: settingsModel.get(entry.index).properties.get(index).max_value
+
+                                                        delegate: Rectangle {
+                                                            required property int index 
+                                                            property int max: settingsModel.get(entry.index).properties.get(rec.index).max_value // max value
+
+                                                            //property int max: settingsModel.get(entry.index).properties.get(index).max_value
+                                                            color: (thingy.current_value <= (index)) ? "transparent" : Colours.colour("rgb(255,0,0)", "rgb(0,255,0)", max - 1, index)
+                                                            
+                                                            height: parent.height
+                                                            Layout.fillWidth: true
+
+                                                            Component.onCompleted: {
+                                                                console.log("max" + max + "index" + rec.index)
+                                                            }
+
+                                                        }
+                                                    }
+
+                                                }
+                                                
+                                            }
+
                                         }
                                     
                                     }
@@ -278,6 +425,22 @@ ShellRoot {
         id: console_page
         property var name: "Console"
 
+        ListModel {
+            id: commands
+            ListElement {
+                name: "sv.ping"
+                description: "Pings the server[s]"
+            }
+            ListElement {
+                name: "sv.target 'name'"
+                description: "Set compass target"
+            }
+            ListElement {
+                name: "sv.target reset"
+                description: "Reset compass"
+            }
+        }
+
         focusable: true
         aboveWindows: true
 
@@ -303,66 +466,179 @@ ShellRoot {
             color: "black"
             border.color: "white"
             border.width: 5
-            z: 2
-
-            Rectangle {
-                anchors.bottom: parent.bottom
-                anchors.left: parent.left
+            
+            Rectangle { // Right Side
                 anchors.right: parent.right
-                height: 100
-                color: "yellow"
-                anchors.margins: 5
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                width: parent.width / 3.05
+                color: "black"
+                border.width: 5
+                border.color: "white"
+                anchors.margins: 10
 
-                TextField {
-                    id: field
-                    focus: true
-                    anchors.fill: parent
-                    placeholderText: "INPUT TEXT HERE"
-                    font.pixelSize: 64
-                    Component.onCompleted: field.forceActiveFocus();
+                ColumnLayout {
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
 
-                    onAccepted: {
-                        console.log(text)
-                        mainsession.sendText(text + "\n");
-                        text = ""
+                    Repeater {
+                        model: commands
+
+                        delegate: Rectangle {
+                            required property int index
+
+                            color: "transparent"
+                            implicitWidth: parent.width
+                            implicitHeight: 75
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                anchors.left: parent.left
+                                anchors.leftMargin: 25
+                                font.pixelSize: 32
+                                font.family: "Fixedsys Excelsior"
+                                color: "white"
+                                text: commands.get(index).name
+                                
+
+                            }
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                anchors.right: parent.right
+                                anchors.rightMargin: 25
+                                font.pixelSize: 32
+                                font.family: "Fixedsys Excelsior"
+                                color: "white"
+                                text: commands.get(index).description
+
+                            }
+
+                            Rectangle {
+                                anchors.bottom: parent.bottom
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+
+                                implicitHeight: 5
+
+                            }
                     }
 
-                    z: 3
+                    }
+                    
                 }
             }
-
-            Rectangle {
-                anchors.fill: parent
-                anchors.bottomMargin: 200
-                anchors.topMargin: 5
-                anchors.rightMargin: 5
-                anchors.leftMargin: 5
+            
+            Rectangle { // Left Side
+                anchors.left: parent.left
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                width: parent.width / 1.5
                 color: "transparent"
+                anchors.margins: 10
+                border.color: "white"
+                border.width: 5
 
-                QMLTermWidget {
-                id: terminal
-                anchors.fill: parent
-                font.family: "Fixedsys Excelsior"
-                font.pointSize: 12
-                colorScheme: "cool-retro-term"
-                session: QMLTermSession{
-                    id: mainsession
-                    initialWorkingDirectory: "$HOME"
-                    onMatchFound: {
-                        console.log("found at: %1 %2 %3 %4".arg(startColumn).arg(startLine).arg(endColumn).arg(endLine));
+                Rectangle { // Top
+                    anchors.top: parent.top
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    height: 150
+                    color: "transparent"
+                    border.color: "white"
+                    border.width: 5
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        x: 25
+                        font.pixelSize: 128
+                        font.family: "Fixedsys Excelsior"
+                        color: "white"
+                        text: "CONSOLE:"
+
                     }
-                    onNoMatchFound: {
-                        console.log("not found");
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.right: parent.right
+                        anchors.rightMargin: 25
+                        font.pixelSize: 128
+                        font.family: "Fixedsys Excelsior"
+                        color: "white"
+                        text: "rah"
 
                     }
 
                 }
-                onTerminalUsesMouseChanged: console.log(terminalUsesMouse);
-                onTerminalSizeChanged: console.log(terminalSize);
-                Component.onCompleted: mainsession.startShellProgram();
+
+                Rectangle {
+                    anchors.bottom: parent.bottom
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    height: 100
+                    color: "transparent"
+                    border.color: "white"
+                    border.width: 5
+
+                    TextField {
+                        id: field
+                        focus: true
+                        anchors.fill: parent
+                        anchors.leftMargin: 5
+                        placeholderText: ""
+                        color: "white"
+                        font.pixelSize: 32
+                        font.family: "Fixedsys Excelsior"
+                        Component.onCompleted: field.forceActiveFocus();
+
+                        onAccepted: {
+                            console.log(text)
+                            mainsession.sendText(text + "\n");
+                            text = ""
+                        }
+
+                        background: Rectangle {
+                            color: "transparent"
+                            
+                        }
+
+                    }
                 }
+
+                Rectangle {
+                    anchors.fill: parent
+                    anchors.bottomMargin: 100
+                    anchors.topMargin: 150
+                    anchors.rightMargin: 5
+                    anchors.leftMargin: 5
+                    color: "transparent"
+
+                    QMLTermWidget {
+                    id: terminal
+                    anchors.fill: parent
+                    font.family: "Fixedsys Excelsior"
+                    font.pointSize: 12
+                    colorScheme: "cool-retro-term"
+                    session: QMLTermSession{
+                        id: mainsession
+                        initialWorkingDirectory: "$HOME"
+                        onMatchFound: {
+                            console.log("found at: %1 %2 %3 %4".arg(startColumn).arg(startLine).arg(endColumn).arg(endLine));
+                        }
+                        onNoMatchFound: {
+                            console.log("not found");
+
+                        }
+
+                    }
+                    onTerminalUsesMouseChanged: console.log(terminalUsesMouse);
+                    onTerminalSizeChanged: console.log(terminalSize);
+                    Component.onCompleted: mainsession.startShellProgram();
+                    }
+
+                }
+
 
             }
+            
 
 
             
@@ -678,7 +954,7 @@ ShellRoot {
 
     // Top Bar
     PanelWindow{
-        color: "transparent"
+        color: "black"
         anchors {
             top: true
             right: true
@@ -774,35 +1050,6 @@ ShellRoot {
                     Button { // Console Button
                         id: console_button
                         property var name: "Console"
-
-                        implicitHeight: 100
-                        Layout.fillWidth: true
-
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            anchors.horizontalCenter: parent.horizontalCenter
-
-                            text: parent.name
-                            font.family: "Fixedsys Excelsior"
-                            font.pixelSize: 64
-                            color: (active_page == parent.name) ? "cyan" : "yellow"
-                        }
-                        
-                        
-                        background: Rectangle {
-                            color: "transparent"
-                            border.color: (active_page == parent.name) ? "cyan" : "yellow"
-                            border.width: 5
-                        }
-
-                        onClicked: {
-                            active_page = name
-                        }
-                    }
-
-                    Button { // Viewer Button
-                        id: viewer_button
-                        property var name: "Viewer"
 
                         implicitHeight: 100
                         Layout.fillWidth: true
