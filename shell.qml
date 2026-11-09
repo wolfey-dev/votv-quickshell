@@ -5,53 +5,71 @@ import Quickshell.Wayland
 import Quickshell.Services.Notifications
 import QtQuick.Controls
 import QMLTermWidget
-import "scripts/colours.js" as Colours
-
 
 ShellRoot {
     id: root
 
-    property var track: true
-
+    // Notification Variables
     property var active_page: "Desktop"
-
     property var notif_image: ""
-    
     property var notif_name: "user"
-
     property var notif_summary: "text"
-
     property var notif_body: ""
 
-    Item {
+    // Settings Variables
+    property int a_margins: settingsModel.get(0).properties.get(1).current_value
+    property int border_width: settingsModel.get(0).properties.get(0).current_value
+    property int notif_font_size: settingsModel.get(1).properties.get(0).current_value
+    property int console_font_size: settingsModel.get(2).properties.get(0).current_value
 
+    ListModel {
+        id: notificationModel
     }
+
     ListModel {
         id: settingsModel
-        
+
         ListElement {            
+            name: "general"
             properties: [
                 ListElement {
-                name: "test_property1"
-                current_value: 2
-                max_value: 5
-                min_value: 0
-                },
-                ListElement {
-                name: "test_property2"
-                current_value: 1
-                max_value: 3
+                name: "border_width"
+                current_value: 5
+                max_value: 10
                 min_value: 1
                 },
                 ListElement {
-                name: "test_property3"
-                current_value: 8
+                name: "margins"
+                current_value: 5
                 max_value: 10
-                min_value: 0
-                }
+                min_value: 1
+                },
             ]
         }
 
+        ListElement {            
+            name: "notifications"
+            properties: [
+                ListElement {
+                name: "font_size"
+                current_value: 5
+                max_value: 10
+                min_value: 1
+                },
+            ]
+        }
+
+        ListElement {            
+            name: "console"
+            properties: [
+                ListElement {
+                name: "console_font_size"
+                current_value: 5
+                max_value: 10
+                min_value: 1
+                },
+            ]
+        }  
     }
 
     NotificationServer {
@@ -60,56 +78,22 @@ ShellRoot {
         bodySupported: true
         imageSupported: true
 
-
         onNotification: n =>{
             n.tracked = true
-            console.log(Config.notifications.tracked)
+            notificationModel.insert(0, {
+                appName: n.appName,
+                appImage: n.image,
+                summary: n.summary,
+                body: n.body,
+                time: Qt.formatDateTime(new Date(), "HH:mm")
+            })
 
         }
     }
 
-    PanelWindow { // Viewer Page
-        id: viewer_page
-        property var name: "Viewer"
+    // Settings Page
 
-        visible: (active_page == name) ? true : false
-        color: "transparent"
-
-        anchors {
-            top: true
-            bottom: true
-            right: true
-            left: true
-        }
-
-        margins {
-            left: 5
-            right: 5
-            bottom: 5
-        }
-
-        Rectangle { 
-            
-            anchors.fill: parent
-            color: "black"
-            border.color: "white"
-            border.width: 5
-
-            Text {
-                color: "white"
-                font.pixelSize: 64
-                text: "WORK IN PROGRESS"
-                font.family: "Fixedsys Excelsior"
-
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.horizontalCenter: parent.horizontalCenter
-            }
-            
-        }
-    }
-
-
-    PanelWindow { // Settings Page
+    PanelWindow { 
         id: settings_page
         property var name: "Settings"
 
@@ -124,23 +108,23 @@ ShellRoot {
         }
 
         margins {
-            left: 5
-            right: 5
-            bottom: 5
+            left: a_margins
+            right: a_margins
+            bottom: a_margins
         }
 
         Rectangle { 
-            
             anchors.fill: parent
             color: "black"
             border.color: "white"
-            border.width: 5
+            border.width: border_width
 
             Rectangle {
                 anchors.fill: parent
-                anchors.margins: 10
+                anchors.margins: a_margins + 5
                 color: "transparent"
 
+                // Settings Column
                 ColumnLayout {
                     spacing: 5
                     anchors.left: parent.left
@@ -149,13 +133,13 @@ ShellRoot {
                     Repeater {
                         model: settingsModel
 
-                        delegate: Rectangle { // Category
+                        delegate: Rectangle {
 
                             id: entry
                             required property int index
 
                             property var h: 100
-                            property var num: 0
+                            property int num
                             property bool dropped: false
 
                             Layout.fillWidth: true
@@ -166,11 +150,12 @@ ShellRoot {
 
                             border.color: "white"
 
-                            border.width: 5
+                            border.width: border_width
 
                             Component.onCompleted: {
                                 num = settingsModel.get(index).properties.count;
                             }
+
                             Button {
                                 implicitWidth: parent.width
                                 implicitHeight: 100
@@ -184,45 +169,52 @@ ShellRoot {
 
                             }
 
+                            Image {
+                                x: 35
+                                scale: 4
+                                y: 45
+                                source: (dropped == true) ? "assets/downy.png" : "assets/uppy.png"
+                            }
+
 
                             Text {
-                                x: 75
+                                x: 85
                                 color: "white"
-                                text: "coordinates"
+                                text: settingsModel.get(index).name
                                 font.pixelSize: 64
                                 font.family: "Fixedsys Excelsior"
                                 y: 20
                             }
 
                             Rectangle {
-                                id: audio
                                 color: "transparent"
                                 anchors.fill: parent
                                 anchors.topMargin: 100
-
                                 
                                 ColumnLayout { 
 
                                     spacing: 0
                                     anchors.left: parent.left
                                     anchors.right: parent.right
-                                    anchors.margins: 50
+                                    anchors.margins: a_margins * 10
 
                                     Repeater {
                                         
                                         model: (dropped == true) ? num : 0
-                                        delegate: Rectangle { // Individual Properties
+                                        delegate: Rectangle { 
                                             id: rec
                                             required property int index
                                             color: "transparent"
                                             border.color: "white"
-                                            border.width: 5
+                                            border.width: border_width
                                             Layout.fillWidth: true
                                             implicitHeight: 100
                                             Component.onCompleted: {
                                                 entry.h += 110
                                             }
+
                                             Component.onDestruction: entry.h -= 110
+
                                             Text {
                                                 text: settingsModel.get(entry.index).properties.get(index).name
                                                 color: "white"
@@ -238,11 +230,11 @@ ShellRoot {
                                                 anchors.top: parent.top
                                                 anchors.bottom: parent.bottom
                                                 anchors.left: parent.left
-                                                anchors.margins: 10
+                                                anchors.margins: a_margins * 2
                                                 implicitWidth: 250
                                                 implicitHeight: parent.height
                                                 border.color: "yellow"
-                                                border.width: 5
+                                                border.width: border_width
                                                 Text {
                                                     text: settingsModel.get(entry.index).properties.get(index).current_value + "/" + settingsModel.get(entry.index).properties.get(index).max_value
                                                     color: "yellow"
@@ -259,7 +251,6 @@ ShellRoot {
                                                 property int current_value: settingsModel.get(entry.index).properties.get(index).current_value
                                                 property int min_value: settingsModel.get(entry.index).properties.get(index).min_value
                                                 property int max_value: settingsModel.get(entry.index).properties.get(index).max_value
-                                
                 
                                                 color: "transparent"
                                                 anchors.top: parent.top
@@ -270,19 +261,19 @@ ShellRoot {
                                                 implicitHeight: parent.height
 
                                                 border.color: "white"
-                                                border.width: 5
+                                                border.width: border_width
 
                                                 Rectangle {
                                                     color: "transparent"
                                                     anchors.top: parent.top
                                                     anchors.bottom: parent.bottom
                                                     anchors.left: parent.left
-                                                    anchors.margins: 10
+                                                    anchors.margins: a_margins * 2
                                                     implicitWidth: parent.height - 10
                                                     implicitHeight: parent.height
 
                                                     border.color: "lime"
-                                                    border.width: 5
+                                                    border.width: border_width
 
                                                     Button {
                                                         anchors.fill: parent
@@ -290,21 +281,14 @@ ShellRoot {
                                                             color: "transparent"
                                                         }
                                                         onClicked: {
-                                                            
                                                             (value_buttons.current_value != value_buttons.max_value) ? settingsModel.get(entry.index).properties.setProperty(index, "current_value", (value_buttons.current_value + 1)) : ""
-                                                            
-                                                            console.log(settingsModel.get(entry.index).properties.get(index).current_value)
-
                                                         }
                                                     }
-                                                    Text {
-                                                        text: "+"
-                                                        color: "lime"
+                                                    Image {
+                                                        source: "assets/up.png"
+                                                        scale: 4
                                                         anchors.verticalCenter: parent.verticalCenter
                                                         anchors.horizontalCenter: parent.horizontalCenter
-                                                        font.family: "Fixedsys Excelsior"
-
-                                                        font.pixelSize: 48
                                                     }
                                                 }
 
@@ -313,12 +297,12 @@ ShellRoot {
                                                     anchors.top: parent.top
                                                     anchors.bottom: parent.bottom
                                                     anchors.right: parent.right
-                                                    anchors.margins: 10
+                                                    anchors.margins: a_margins * 2
                                                     implicitWidth: parent.height - 10
                                                     implicitHeight: parent.height
 
                                                     border.color: "lime"
-                                                    border.width: 5
+                                                    border.width: border_width
                                                     Button {
                                                         anchors.fill: parent
                                                         background: Rectangle {
@@ -326,22 +310,14 @@ ShellRoot {
                                                         }
                                                         onClicked: {
                                                             (value_buttons.current_value != value_buttons.min_value) ? settingsModel.get(entry.index).properties.setProperty(index, "current_value", (value_buttons.current_value - 1)) : ""
-
-                                                            // settingsModel.get(entry.index).properties.setProperty(index, "current_value", (value_buttons.current_value - 1))
-                                                            console.log(settingsModel.get(entry.index).properties.get(index).min_value)
-                                                            console.log(settingsModel.get(entry.index).properties.get(index).current_value)
-
                                                         }
                                                     }
 
-                                                    Text {
-                                                        text: "-"
-                                                        color: "lime"
+                                                    Image {
+                                                        source: "assets/down.png"
+                                                        scale: 4
                                                         anchors.verticalCenter: parent.verticalCenter
                                                         anchors.horizontalCenter: parent.horizontalCenter
-                                                        font.family: "Fixedsys Excelsior"
-
-                                                        font.pixelSize: 48
                                                     }
                                                 }
 
@@ -359,7 +335,7 @@ ShellRoot {
                                                 anchors.top: parent.top
                                                 anchors.bottom: parent.bottom
                                                 anchors.left: parent.left
-                                                anchors.margins: 10
+                                                anchors.margins: a_margins * 2
                                                 anchors.leftMargin: 280
                                                 implicitWidth: 750
                                                 implicitHeight: parent.height
@@ -374,70 +350,53 @@ ShellRoot {
 
                                                         delegate: Rectangle {
                                                             required property int index 
-                                                            property int max: settingsModel.get(entry.index).properties.get(rec.index).max_value // max value
 
-                                                            //property int max: settingsModel.get(entry.index).properties.get(index).max_value
-                                                            color: (thingy.current_value <= (index)) ? "transparent" : Colours.colour("rgb(255,0,0)", "rgb(0,255,0)", max - 1, index)
+                                                            color: (thingy.current_value <= (index)) ? "transparent" : "lime"
                                                             
                                                             height: parent.height
                                                             Layout.fillWidth: true
-
-                                                            Component.onCompleted: {
-                                                                console.log("max" + max + "index" + rec.index)
-                                                            }
-
                                                         }
                                                     }
-
                                                 }
-                                                
                                             }
-
                                         }
-                                    
                                     }
                                 }
                             }
-
-
+                        }
                     }
-                    
-
-
-                    
-                    }
-
-
-                    
-                    
-                    
                 }
             }
-            
-            
-            
         }
     }
 
 
-
-    PanelWindow { // Console Page
+    // Console Page
+    PanelWindow { 
         id: console_page
         property var name: "Console"
 
         ListModel {
             id: commands
             ListElement {
-                name: "sv.ping"
+                name: "ping"
                 description: "Pings the server[s]"
             }
             ListElement {
-                name: "sv.target 'name'"
-                description: "Set compass target"
+                name: "pacman -S []"
+                description: "Install package[s]"
             }
             ListElement {
-                name: "sv.target reset"
-                description: "Reset compass"
+                name: "quickshell kill"
+                description: "Kill quickshell instances"
+            }
+            ListElement {
+                name: "notify-send"
+                description: "Test notifications"
+            }
+            ListElement {
+                name: "history"
+                description: "Show command history"
             }
         }
 
@@ -455,9 +414,9 @@ ShellRoot {
         }
 
         margins {
-            left: 5
-            right: 5
-            bottom: 5
+            left: a_margins
+            right: a_margins
+            bottom: a_margins
         }
 
         Rectangle { 
@@ -465,17 +424,18 @@ ShellRoot {
             anchors.fill: parent
             color: "black"
             border.color: "white"
-            border.width: 5
+            border.width: border_width
             
-            Rectangle { // Right Side
+            // Right Side
+            Rectangle { 
                 anchors.right: parent.right
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
                 width: parent.width / 3.05
                 color: "black"
-                border.width: 5
+                border.width: border_width
                 border.color: "white"
-                anchors.margins: 10
+                anchors.margins: a_margins * 2
 
                 ColumnLayout {
                     anchors.left: parent.left
@@ -521,31 +481,31 @@ ShellRoot {
                                 implicitHeight: 5
 
                             }
+                        }
                     }
-
-                    }
-                    
                 }
             }
             
-            Rectangle { // Left Side
+            // Left Side
+            Rectangle { 
                 anchors.left: parent.left
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
                 width: parent.width / 1.5
                 color: "transparent"
-                anchors.margins: 10
+                anchors.margins: a_margins * 2
                 border.color: "white"
-                border.width: 5
+                border.width: border_width
 
-                Rectangle { // Top
+                // Top Side
+                Rectangle { 
                     anchors.top: parent.top
                     anchors.left: parent.left
                     anchors.right: parent.right
                     height: 150
                     color: "transparent"
                     border.color: "white"
-                    border.width: 5
+                    border.width: border_width
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         x: 25
@@ -553,7 +513,6 @@ ShellRoot {
                         font.family: "Fixedsys Excelsior"
                         color: "white"
                         text: "CONSOLE:"
-
                     }
 
                     Text {
@@ -563,10 +522,8 @@ ShellRoot {
                         font.pixelSize: 128
                         font.family: "Fixedsys Excelsior"
                         color: "white"
-                        text: "rah"
-
+                        text: "user"
                     }
-
                 }
 
                 Rectangle {
@@ -576,7 +533,7 @@ ShellRoot {
                     height: 100
                     color: "transparent"
                     border.color: "white"
-                    border.width: 5
+                    border.width: border_width
 
                     TextField {
                         id: field
@@ -590,16 +547,13 @@ ShellRoot {
                         Component.onCompleted: field.forceActiveFocus();
 
                         onAccepted: {
-                            console.log(text)
                             mainsession.sendText(text + "\n");
                             text = ""
                         }
 
                         background: Rectangle {
                             color: "transparent"
-                            
                         }
-
                     }
                 }
 
@@ -615,7 +569,7 @@ ShellRoot {
                     id: terminal
                     anchors.fill: parent
                     font.family: "Fixedsys Excelsior"
-                    font.pointSize: 12
+                    font.pointSize: 3 * settingsModel.get(2).properties.get(0).current_value
                     colorScheme: "cool-retro-term"
                     session: QMLTermSession{
                         id: mainsession
@@ -625,29 +579,20 @@ ShellRoot {
                         }
                         onNoMatchFound: {
                             console.log("not found");
-
                         }
-
                     }
                     onTerminalUsesMouseChanged: console.log(terminalUsesMouse);
                     onTerminalSizeChanged: console.log(terminalSize);
                     Component.onCompleted: mainsession.startShellProgram();
                     }
-
                 }
-
-
             }
-            
-
-
-            
-
-            
         }
     }
 
-    PanelWindow { // Notifications Page
+    // Notifications Page
+
+    PanelWindow { 
         id: notifications_page
         property var name: "Notifications"
 
@@ -659,28 +604,80 @@ ShellRoot {
         anchors {
             top: true
             bottom: true
+
             right: true
             left: true
         }
 
         margins {
-            left: 5
-            right: 5
-            bottom: 5
+            left: a_margins
+            right: a_margins
+            bottom: a_margins
         }
 
         
         Rectangle { 
             anchors.fill: parent
             color: "black"
-            Rectangle { // Left Side
+            // Left Side
+            Rectangle { 
                 color: "transparent"
                 border.color: "white"
-                border.width: 5
+                border.width: border_width
                 anchors.top: parent.top 
                 anchors.bottom: parent.bottom
                 anchors.left: parent.left
                 implicitWidth: parent.width / 2 - 2.5
+
+                // Top
+                Rectangle { 
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        implicitHeight: 115
+                        border.color: "white"
+                        border.width: border_width
+                        color: "transparent"
+
+                        Rectangle {
+                            anchors.left: parent.left
+                            anchors.top: parent.top
+                            anchors.bottom: parent.bottom
+                            implicitWidth: 5
+                            anchors.leftMargin: 505
+                        }
+
+                        Button {
+                            anchors.top: parent.top
+                            anchors.bottom: parent.bottom
+                            anchors.left: parent.left
+                            implicitWidth: 505
+                            background: Rectangle {
+                                color: "transparent"
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    x: 110
+                                    color: "red"
+                                    text: "Clear All"
+                                    font.family: "Fixedsys Excelsior"
+                                    font.pixelSize: notif_font_size * 16
+                                }
+
+                                Image {
+                                    source: "assets/x.png"
+                                    scale: 4
+                                    x: 45
+                                    
+                                    anchors.verticalCenter: parent.verticalCenter
+
+                                }
+                            }
+
+                            onClicked: {
+                                notificationModel.clear()
+                            }
+                        }
+                    }
 
                 Rectangle {
                     anchors.top: parent.top
@@ -692,18 +689,23 @@ ShellRoot {
 
                     anchors.leftMargin: 5
                     anchors.rightMargin: 6
+                    anchors.topMargin: 100
+
+                    
 
                     Column {
                         spacing: 5
                         anchors.fill: parent
-                        anchors.topMargin: 5
+                        anchors.topMargin: 15
                         
                         Repeater {
-                            model: server.trackedNotifications
+                            model: notificationModel
                             delegate: Rectangle {
                                 id: entry
                                 
                                 required property var modelData
+                                required property int index
+
                                 property bool seen: false
 
                                 color: "transparent"
@@ -738,29 +740,40 @@ ShellRoot {
                                     }
 
                                     onClicked: {
-                                        modelData.dismiss()
+                                        notificationModel.remove(index, 1)
                                     }
                                 }
                                 
 
-                                Text { // user text
+                                Text { 
                                     x: 64
                                     anchors.verticalCenter: parent.verticalCenter
                                     text: modelData.appName
                                     font.family: "Fixedsys Excelsior"
-                                    font.pixelSize: 54
+                                    font.pixelSize: notif_font_size * 13
                                     color: "lime"
 
                                 }
 
-                                Text { // summary text
+                                Text { 
                                     x: 516
                                     anchors.verticalCenter: parent.verticalCenter
                                     text: modelData.summary
                                     font.family: "Fixedsys Excelsior"
-                                    font.pixelSize: 32
+                                    font.pixelSize: notif_font_size * 8
                                     color: (seen == false) ? "white" : "gray"
                                 }
+
+                                Text { 
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    anchors.right: parent.right
+                                    anchors.rightMargin: 20
+                                    text: modelData.time
+                                    font.family: "Fixedsys Excelsior"
+                                    font.pixelSize: notif_font_size * 12
+                                    color: (seen == false) ? "cyan" : "gray"
+                                }
+
 
 
                                 Rectangle {
@@ -780,27 +793,17 @@ ShellRoot {
                                     anchors.right: parent.right
                                     anchors.topMargin: 50
                                 }
-
-
                             }
-
-                            
-
                         }
-                    
                     }
-
                 }
-
-                
-
             }
         }
-
-            Rectangle { // Right Side
+            // Right Side
+            Rectangle { 
                 color: "transparent"
                 border.color: "white"
-                border.width: 5
+                border.width: border_width
                 anchors.top: parent.top 
                 anchors.bottom: parent.bottom
                 anchors.right: parent.right
@@ -817,25 +820,22 @@ ShellRoot {
                     anchors.topMargin: 5
                     height: 110
 
-                    Text { // app name text
+                    Text { 
                         anchors.verticalCenter: parent.verticalCenter
                         x: 130
                         text: notif_name
                         font.family: "Fixedsys Excelsior"
-                        font.pixelSize: 86
+                        font.pixelSize: notif_font_size * 21
                         color: "yellow"
                     }
 
-
                     Image {
-                        source: (notif_image) ? notif_image : "assets/empty.png"
+                        source: (notif_image) ? notif_image : "assets/null.png"
                         width: 110
                         height: 110
                         
                         anchors.verticalCenter: parent.verticalCenter
-
                     }
-
                 }
 
                 Rectangle {
@@ -847,18 +847,15 @@ ShellRoot {
                     anchors.topMargin: 110
                     height: 110
 
-                    Text { // summary text
+                    Text { 
                         anchors.verticalCenter: parent.verticalCenter
                         x: 15
                         text: notif_summary
                         font.family: "Fixedsys Excelsior"
-                        font.pixelSize: 64
+                        font.pixelSize: notif_font_size * 16
                         color: "white"
                         
                     }
-
-                    
-
                 }
 
                 Rectangle {
@@ -870,20 +867,17 @@ ShellRoot {
                     anchors.leftMargin: 5
                     anchors.topMargin: 210
 
-                    Text { // body text
+                    Text { 
                         width: parent.width
                         wrapMode: Text.WordWrap
                         y: 15
                         x: 15
                         text: notif_body
                         font.family: "Fixedsys Excelsior"
-                        font.pixelSize: 48
+                        font.pixelSize: notif_font_size * 12
                         color: "white"
                         
                     }
-
-                    
-
                 }
                 
 
@@ -919,7 +913,7 @@ ShellRoot {
             bottom: true
             right: true
         }
-        width: 5
+        implicitWidth: 5
     }
 
     PanelWindow{
@@ -929,7 +923,7 @@ ShellRoot {
             bottom: true
             left: true
         }
-        width: 5
+        implicitWidth: 5
     }
 
     PanelWindow{
@@ -949,7 +943,7 @@ ShellRoot {
             right: true
             left: true
         }
-        height: 5
+        implicitHeight: 5
     }
 
     // Top Bar
@@ -962,10 +956,10 @@ ShellRoot {
         }
 
         margins {
-            top: 5
-            bottom: 5
-            right: 5
-            left: 5
+            top: a_margins
+            bottom: a_margins
+            right: a_margins
+            left: a_margins
         }
 
         implicitHeight: 120
@@ -974,7 +968,7 @@ ShellRoot {
             anchors.fill: parent
             color: "transparent"
             border.color: "white"
-            border.width: 5
+            border.width: border_width
 
             Rectangle {
                 color: "transparent"
@@ -989,7 +983,7 @@ ShellRoot {
                     width: parent.width
                     height: parent.height
                     
-                    Button { // Desktop Button
+                    Button { 
                         id: desktop_button
                         property var name: "Desktop"
 
@@ -1010,7 +1004,7 @@ ShellRoot {
                         background: Rectangle {
                             color: "transparent"
                             border.color: (active_page == parent.name) ? "cyan" : "yellow"
-                            border.width: 5
+                            border.width: border_width
                         }
 
                         onClicked: {
@@ -1018,7 +1012,8 @@ ShellRoot {
                         }
                     }
 
-                    Button { // Notifications Button
+
+                    Button { 
                         id: notifications_button
                         property var name: "Notifications"
 
@@ -1039,7 +1034,7 @@ ShellRoot {
                         background: Rectangle {
                             color: "transparent"
                             border.color: (active_page == parent.name) ? "cyan" : "yellow"
-                            border.width: 5
+                            border.width: border_width
                         }
 
                         onClicked: {
@@ -1047,7 +1042,7 @@ ShellRoot {
                         }
                     }
 
-                    Button { // Console Button
+                    Button { 
                         id: console_button
                         property var name: "Console"
 
@@ -1068,7 +1063,7 @@ ShellRoot {
                         background: Rectangle {
                             color: "transparent"
                             border.color: (active_page == parent.name) ? "cyan" : "yellow"
-                            border.width: 5
+                            border.width: border_width
                         }
 
                         onClicked: {
@@ -1076,7 +1071,7 @@ ShellRoot {
                         }
                     }
 
-                    Button { // Settings Button
+                    Button { 
                         id: settings_button
                         property var name: "Settings"
 
@@ -1097,24 +1092,17 @@ ShellRoot {
                         background: Rectangle {
                             color: "transparent"
                             border.color: (active_page == parent.name) ? "cyan" : "yellow"
-                            border.width: 5
+                            border.width: border_width
                         }
 
                         onClicked: {
                             active_page = name
                         }
                     }
-
-
-
-
-                    }
                 }
-
             }
-            
         }
     }
-
+}
 
 
