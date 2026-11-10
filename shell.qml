@@ -222,7 +222,7 @@ ShellRoot {
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 font.family: "Fixedsys Excelsior"
 
-                                                font.pixelSize: 64 
+                                                font.pixelSize: 48 
                                             }
 
                                             Rectangle {
@@ -388,7 +388,7 @@ ShellRoot {
             }
             ListElement {
                 name: "quickshell kill"
-                description: "Kill quickshell instances"
+                description: "Kill quickshell"
             }
             ListElement {
                 name: "notify-send"
@@ -397,6 +397,10 @@ ShellRoot {
             ListElement {
                 name: "history"
                 description: "Show command history"
+            }
+            ListElement {
+                name: "bla"
+                description: "bla"
             }
         }
 
